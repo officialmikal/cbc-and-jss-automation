@@ -1,0 +1,5 @@
+{
+  "name": "ElimuSmart CBC & JSS Management System",
+  "description": "A comprehensive school management system designed specifically for the Kenyan Competency-Based Curriculum (CBC) and Junior Secondary School (JSS), featuring student management, automated report cards with AI-powered remarks, and a full finance/fee tracking module.",
+  "requestFramePermissions": []
+}
