@@ -16,6 +16,14 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
   const [searchTerm, setSearchTerm] = useState('');
   const [bulkCsv, setBulkCsv] = useState('');
   
+  const generateId = () => {
+    try {
+      return crypto.randomUUID();
+    } catch (e) {
+      return `std-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+  };
+
   const [formData, setFormData] = useState({
     name: '',
     admissionNo: '',
@@ -30,7 +38,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAddStudent({ id: crypto.randomUUID(), ...formData });
+    onAddStudent({ id: generateId(), ...formData });
     setFormData({ 
       ...formData, 
       name: '', 
@@ -50,7 +58,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
       const [name, adm, grade, stream, parent, phone, date] = line.split(',').map(s => s?.trim());
       if (name && adm) {
         onAddStudent({
-          id: crypto.randomUUID(),
+          id: generateId(),
           name,
           admissionNo: adm,
           grade: grade || GRADES[0],

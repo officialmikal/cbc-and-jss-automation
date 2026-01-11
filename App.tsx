@@ -66,43 +66,57 @@ const App: React.FC = () => {
   };
 
   const handleAddStudent = (s: Student) => {
-    const updated = [...students, s];
-    setStudents(updated);
-    store.saveStudents(updated);
+    setStudents(prev => {
+      const updated = [...prev, s];
+      store.saveStudents(updated);
+      return updated;
+    });
   };
 
   const handleDeleteStudent = (id: string) => {
-    if (window.confirm("Are you sure you want to remove this student? All academic and financial records for this student will be lost.")) {
-      const updated = students.filter(s => s.id !== id);
-      setStudents(updated);
-      store.saveStudents(updated);
+    if (window.confirm("Confirm deletion? This will remove all academic and financial history for this student. This action cannot be undone.")) {
+      // Use functional updates to avoid stale state issues
+      setStudents(prev => {
+        const updated = prev.filter(s => s.id !== id);
+        store.saveStudents(updated);
+        return updated;
+      });
       
-      // Also cleanup assessments and payments (Optional but recommended)
-      const updatedAssessments = assessments.filter(a => a.studentId !== id);
-      setAssessments(updatedAssessments);
-      store.saveAssessments(updatedAssessments);
+      setAssessments(prev => {
+        const updated = prev.filter(a => a.studentId !== id);
+        store.saveAssessments(updated);
+        return updated;
+      });
       
-      const updatedPayments = payments.filter(p => p.studentId !== id);
-      setPayments(updatedPayments);
-      store.savePayments(updatedPayments);
+      setPayments(prev => {
+        const updated = prev.filter(p => p.studentId !== id);
+        store.savePayments(updated);
+        return updated;
+      });
+
+      console.log(`Deleted student with ID: ${id}`);
     }
   };
 
   const handleSaveAssessments = (newBatch: Assessment[]) => {
-    const updated = [...assessments];
-    newBatch.forEach(newItem => {
-      const idx = updated.findIndex(a => a.studentId === newItem.studentId && a.subjectId === newItem.subjectId && a.term === newItem.term);
-      if (idx > -1) updated[idx] = newItem;
-      else updated.push(newItem);
+    setAssessments(prev => {
+      const updated = [...prev];
+      newBatch.forEach(newItem => {
+        const idx = updated.findIndex(a => a.studentId === newItem.studentId && a.subjectId === newItem.subjectId && a.term === newItem.term);
+        if (idx > -1) updated[idx] = newItem;
+        else updated.push(newItem);
+      });
+      store.saveAssessments(updated);
+      return updated;
     });
-    setAssessments(updated);
-    store.saveAssessments(updated);
   };
 
   const handleAddPayment = (p: Payment) => {
-    const updated = [...payments, p];
-    setPayments(updated);
-    store.savePayments(updated);
+    setPayments(prev => {
+      const updated = [...prev, p];
+      store.savePayments(updated);
+      return updated;
+    });
   };
 
   if (!user) {
