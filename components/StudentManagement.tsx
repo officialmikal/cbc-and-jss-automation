@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Student } from '../types';
 import { GRADES } from '../constants';
-import { Plus, Search, Filter, Download, MoreVertical, X } from 'lucide-react';
+import { Plus, Search, Filter, Download, MoreVertical, X, Upload, FileJson } from 'lucide-react';
 
 interface StudentManagementProps {
   students: Student[];
@@ -11,7 +11,10 @@ interface StudentManagementProps {
 
 const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddStudent }) => {
   const [showModal, setShowModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [bulkCsv, setBulkCsv] = useState('');
+  
   const [formData, setFormData] = useState({
     name: '',
     admissionNo: '',
@@ -25,21 +28,34 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAddStudent({
-      id: crypto.randomUUID(),
-      ...formData
-    });
-    setFormData({
-      name: '',
-      admissionNo: '',
-      grade: GRADES[0],
-      stream: 'A',
-      parentName: '',
-      parentPhone: '',
-      term: 1,
-      year: new Date().getFullYear()
-    });
+    onAddStudent({ id: crypto.randomUUID(), ...formData });
+    setFormData({ ...formData, name: '', admissionNo: '', parentName: '', parentPhone: '' });
     setShowModal(false);
+  };
+
+  const handleBulkUpload = () => {
+    const lines = bulkCsv.split('\n');
+    let count = 0;
+    lines.forEach(line => {
+      const [name, adm, grade, stream, parent, phone] = line.split(',').map(s => s?.trim());
+      if (name && adm) {
+        onAddStudent({
+          id: crypto.randomUUID(),
+          name,
+          admissionNo: adm,
+          grade: grade || GRADES[0],
+          stream: stream || 'A',
+          parentName: parent || 'N/A',
+          parentPhone: phone || 'N/A',
+          term: 1,
+          year: 2024
+        });
+        count++;
+      }
+    });
+    alert(`Successfully uploaded ${count} students.`);
+    setBulkCsv('');
+    setShowBulkModal(false);
   };
 
   const filteredStudents = students.filter(s => 
@@ -49,7 +65,6 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
 
   return (
     <div className="space-y-6">
-      {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
         <div className="flex flex-1 gap-2">
           <div className="relative flex-1 max-w-md">
@@ -62,13 +77,13 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50">
-            <Filter className="w-5 h-5 text-slate-600" />
-          </button>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-200 transition-colors">
-            <Download className="w-4 h-4" /> Export CSV
+          <button 
+            onClick={() => setShowBulkModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors"
+          >
+            <Upload className="w-4 h-4" /> Bulk Upload
           </button>
           <button 
             onClick={() => setShowModal(true)}
@@ -79,7 +94,6 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
         </div>
       </div>
 
-      {/* Student List */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -127,7 +141,37 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
         </div>
       </div>
 
-      {/* Add Modal */}
+      {/* Bulk Upload Modal */}
+      {showBulkModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl">
+            <div className="px-8 py-6 bg-slate-50 border-b flex justify-between items-center">
+              <h3 className="text-xl font-bold">Bulk Learner Upload</h3>
+              <button onClick={() => setShowBulkModal(false)}><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-8 space-y-4">
+              <p className="text-sm text-slate-500 italic">Paste CSV data below: <br/> Format: <code className="bg-slate-100 px-1 rounded">Name, AdmNo, Grade, Stream, ParentName, Phone</code></p>
+              <textarea 
+                className="w-full h-48 p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-xs focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                placeholder="John Doe, ADM001, Grade 4, A, Jane Doe, 0712345678"
+                value={bulkCsv}
+                onChange={e => setBulkCsv(e.target.value)}
+              />
+              <div className="flex justify-end gap-3">
+                <button onClick={() => setShowBulkModal(false)} className="px-6 py-2 text-slate-600">Cancel</button>
+                <button 
+                  onClick={handleBulkUpload}
+                  className="px-8 py-2 bg-indigo-600 text-white rounded-xl font-bold shadow-lg"
+                >
+                  Confirm Upload
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Add Modal (Existing) */}
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl">
@@ -141,83 +185,40 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Full Name</label>
-                  <input 
-                    required
-                    type="text" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    placeholder="e.g. John Doe"
-                    value={formData.name}
-                    onChange={e => setFormData({...formData, name: e.target.value})}
-                  />
+                  <input required type="text" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"
+                    value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Admission No.</label>
-                  <input 
-                    required
-                    type="text" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    placeholder="ADM-001"
-                    value={formData.admissionNo}
-                    onChange={e => setFormData({...formData, admissionNo: e.target.value})}
-                  />
+                  <input required type="text" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"
+                    value={formData.admissionNo} onChange={e => setFormData({...formData, admissionNo: e.target.value})} />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Grade</label>
-                  <select 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    value={formData.grade}
-                    onChange={e => setFormData({...formData, grade: e.target.value})}
-                  >
+                  <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"
+                    value={formData.grade} onChange={e => setFormData({...formData, grade: e.target.value})} >
                     {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Stream</label>
-                  <input 
-                    type="text" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    placeholder="A / B / North"
-                    value={formData.stream}
-                    onChange={e => setFormData({...formData, stream: e.target.value})}
-                  />
+                  <input type="text" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"
+                    value={formData.stream} onChange={e => setFormData({...formData, stream: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Parent/Guardian Name</label>
-                  <input 
-                    required
-                    type="text" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    placeholder="Jane Smith"
-                    value={formData.parentName}
-                    onChange={e => setFormData({...formData, parentName: e.target.value})}
-                  />
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Parent/Guardian</label>
+                  <input required type="text" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"
+                    value={formData.parentName} onChange={e => setFormData({...formData, parentName: e.target.value})} />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Parent Phone</label>
-                  <input 
-                    required
-                    type="tel" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    placeholder="0712 345 678"
-                    value={formData.parentPhone}
-                    onChange={e => setFormData({...formData, parentPhone: e.target.value})}
-                  />
+                  <input required type="tel" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"
+                    value={formData.parentPhone} onChange={e => setFormData({...formData, parentPhone: e.target.value})} />
                 </div>
               </div>
               <div className="mt-8 flex justify-end gap-3">
-                <button 
-                  type="button" 
-                  onClick={() => setShowModal(false)}
-                  className="px-6 py-3 text-slate-600 font-medium hover:bg-slate-100 rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all"
-                >
-                  Register Learner
-                </button>
+                <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 text-slate-600">Cancel</button>
+                <button type="submit" className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg">Register Learner</button>
               </div>
             </form>
           </div>
