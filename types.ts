@@ -29,6 +29,7 @@ export interface Student {
   parentPhone: string;
   term: number;
   year: number;
+  admissionDate: string;
 }
 
 export interface Assessment {

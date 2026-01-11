@@ -71,6 +71,23 @@ const App: React.FC = () => {
     store.saveStudents(updated);
   };
 
+  const handleDeleteStudent = (id: string) => {
+    if (window.confirm("Are you sure you want to remove this student? All academic and financial records for this student will be lost.")) {
+      const updated = students.filter(s => s.id !== id);
+      setStudents(updated);
+      store.saveStudents(updated);
+      
+      // Also cleanup assessments and payments (Optional but recommended)
+      const updatedAssessments = assessments.filter(a => a.studentId !== id);
+      setAssessments(updatedAssessments);
+      store.saveAssessments(updatedAssessments);
+      
+      const updatedPayments = payments.filter(p => p.studentId !== id);
+      setPayments(updatedPayments);
+      store.savePayments(updatedPayments);
+    }
+  };
+
   const handleSaveAssessments = (newBatch: Assessment[]) => {
     const updated = [...assessments];
     newBatch.forEach(newItem => {
@@ -210,7 +227,7 @@ const App: React.FC = () => {
       setActiveTab={setActiveTab}
     >
       {activeTab === 'dashboard' && <Dashboard students={students} payments={payments} assessments={assessments} />}
-      {activeTab === 'students' && <StudentManagement students={students} onAddStudent={handleAddStudent} />}
+      {activeTab === 'students' && <StudentManagement students={students} onAddStudent={handleAddStudent} onDeleteStudent={handleDeleteStudent} />}
       {activeTab === 'academic' && <AcademicModule students={students} assessments={assessments} onSaveAssessments={handleSaveAssessments} />}
       {activeTab === 'finance' && <FinanceModule students={students} payments={payments} onAddPayment={handleAddPayment} />}
       {activeTab === 'reports' && <ReportsModule students={students} assessments={assessments} />}

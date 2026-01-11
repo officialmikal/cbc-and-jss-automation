@@ -45,6 +45,15 @@ const Dashboard: React.FC<DashboardProps> = ({ students, payments, assessments }
     count: gradeDistribution[k]
   }));
 
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-KE', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -135,12 +144,14 @@ const Dashboard: React.FC<DashboardProps> = ({ students, payments, assessments }
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {students.slice(0, 5).map(student => (
+              {students.slice().reverse().slice(0, 5).map(student => (
                 <tr key={student.id} className="hover:bg-slate-50 transition-colors">
                   <td className="py-4 text-sm font-medium text-slate-700">{student.admissionNo}</td>
                   <td className="py-4 text-sm text-slate-600">{student.name}</td>
                   <td className="py-4 text-sm text-slate-600">{student.grade}</td>
-                  <td className="py-4 text-sm text-slate-600">Jan 12, 2024</td>
+                  <td className="py-4 text-sm text-slate-600">
+                    {formatDate(student.admissionDate)}
+                  </td>
                   <td className="py-4">
                     <span className="px-2 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700 rounded-full">Active</span>
                   </td>
