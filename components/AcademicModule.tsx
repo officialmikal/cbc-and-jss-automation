@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Student, Assessment, Subject, PerformanceLevel } from '../types';
 import { PRIMARY_SUBJECTS, JSS_SUBJECTS } from '../constants';
 import { calculatePerformanceLevel } from '../store';
 import { generateTeacherRemarks } from '../services/aiService';
-import { Sparkles, Save, Info, CheckCircle2, Loader2, ListOrdered, X } from 'lucide-react';
+import { Sparkles, Save, Info, CheckCircle2, Loader2, ListOrdered, X, WifiOff } from 'lucide-react';
 
 interface AcademicModuleProps {
   students: Student[];
@@ -19,6 +19,17 @@ const AcademicModule: React.FC<AcademicModuleProps> = ({ students, assessments, 
   const [loadingRemarks, setLoadingRemarks] = useState<Record<string, boolean>>({});
   const [showBulkMarksModal, setShowBulkMarksModal] = useState(false);
   const [bulkMarksCsv, setBulkMarksCsv] = useState('');
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleStatus = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', handleStatus);
+    window.addEventListener('offline', handleStatus);
+    return () => {
+      window.removeEventListener('online', handleStatus);
+      window.removeEventListener('offline', handleStatus);
+    };
+  }, []);
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
   const subjects = selectedStudent 
@@ -31,7 +42,7 @@ const AcademicModule: React.FC<AcademicModuleProps> = ({ students, assessments, 
   };
 
   const handleGenerateAI = async (subId: string, subjectName: string) => {
-    if (!scores[subId]) return;
+    if (!scores[subId] || !isOnline) return;
     setLoadingRemarks(prev => ({ ...prev, [subId]: true }));
     const level = calculatePerformanceLevel(scores[subId]);
     const aiText = await generateTeacherRemarks(subjectName, scores[subId], level);
@@ -145,9 +156,15 @@ const AcademicModule: React.FC<AcademicModuleProps> = ({ students, assessments, 
                               value={remarks[sub.id] || ''}
                               onChange={e => setRemarks({...remarks, [sub.id]: e.target.value})}
                             />
-                            <button onClick={() => handleGenerateAI(sub.id, sub.name)} disabled={loadingRemarks[sub.id] || !scores[sub.id]}
-                              className="absolute bottom-2 right-2 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100">
-                              {loadingRemarks[sub.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                            <button 
+                              onClick={() => handleGenerateAI(sub.id, sub.name)} 
+                              disabled={loadingRemarks[sub.id] || !scores[sub.id] || !isOnline}
+                              className={`absolute bottom-2 right-2 p-1.5 rounded-md transition-all ${
+                                !isOnline ? 'bg-slate-100 text-slate-400' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                              }`}
+                              title={isOnline ? "Generate AI Remarks" : "Offline - AI Disabled"}
+                            >
+                              {loadingRemarks[sub.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : (isOnline ? <Sparkles className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />)}
                             </button>
                           </div>
                         </td>

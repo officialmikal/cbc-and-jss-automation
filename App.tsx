@@ -8,15 +8,8 @@ import StudentManagement from './components/StudentManagement';
 import AcademicModule from './components/AcademicModule';
 import FinanceModule from './components/FinanceModule';
 import ReportsModule from './components/ReportsModule';
+import SettingsModule from './components/SettingsModule';
 import { LogIn, ShieldAlert, Lock, User as UserIcon, AlertCircle, Loader2 } from 'lucide-react';
-
-// Mock credentials for demonstration
-const MOCK_CREDENTIALS: Record<UserRole, { username: string; password: string }> = {
-  [UserRole.ADMIN]: { username: 'admin', password: 'admin123' },
-  [UserRole.TEACHER]: { username: 'teacher', password: 'teacher123' },
-  [UserRole.ACCOUNTANT]: { username: 'accountant', password: 'pay123' },
-  [UserRole.HEADTEACHER]: { username: 'headteacher', password: 'school123' },
-};
 
 const App: React.FC = () => {
   const [user, setUser] = useState<{ role: UserRole; username: string } | null>(null);
@@ -51,7 +44,8 @@ const App: React.FC = () => {
 
     // Simulate network delay for realism
     setTimeout(() => {
-      const creds = MOCK_CREDENTIALS[loginRole];
+      const dynamicCreds = store.getCredentials();
+      const creds = dynamicCreds[loginRole];
       if (username === creds.username && password === creds.password) {
         const authenticatedUser = { role: loginRole, username };
         setUser(authenticatedUser);
@@ -220,6 +214,7 @@ const App: React.FC = () => {
       {activeTab === 'academic' && <AcademicModule students={students} assessments={assessments} onSaveAssessments={handleSaveAssessments} />}
       {activeTab === 'finance' && <FinanceModule students={students} payments={payments} onAddPayment={handleAddPayment} />}
       {activeTab === 'reports' && <ReportsModule students={students} assessments={assessments} />}
+      {activeTab === 'settings' && user.role === UserRole.ADMIN && <SettingsModule />}
     </Layout>
   );
 };
