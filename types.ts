@@ -46,6 +46,8 @@ export interface Subject {
   id: string;
   name: string;
   category: 'Primary' | 'JSS';
+  grade: string;
+  teacherName?: string;
 }
 
 export interface FeeStructure {

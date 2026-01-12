@@ -2,7 +2,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { PerformanceLevel } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Always initialize GoogleGenAI with a named parameter for apiKey exclusively from process.env.API_KEY
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateTeacherRemarks = async (subject: string, score: number, level: PerformanceLevel) => {
   try {
@@ -12,11 +13,13 @@ export const generateTeacherRemarks = async (subject: string, score: number, lev
     Mention a specific strength or area for improvement based on the score. 
     Keep it in Kenyan educational context. Do not include quotes.`;
 
+    // Use ai.models.generateContent to query the model with the prompt
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
     });
 
+    // Directly access the .text property of GenerateContentResponse
     return response.text?.trim() || "Consistently demonstrates commitment to learning.";
   } catch (error) {
     console.error("AI Remarks Error:", error);

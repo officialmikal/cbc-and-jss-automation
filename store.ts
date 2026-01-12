@@ -1,15 +1,15 @@
 
-import { Student, Assessment, Payment, FeeStructure, PerformanceLevel, UserRole } from './types';
+import { Student, Assessment, Payment, FeeStructure, PerformanceLevel, UserRole, Subject } from './types';
 
 const STORAGE_KEYS = {
   STUDENTS: 'es_students',
   ASSESSMENTS: 'es_assessments',
   PAYMENTS: 'es_payments',
   FEE_STRUCTURES: 'es_fee_structures',
-  CREDENTIALS: 'es_credentials'
+  CREDENTIALS: 'es_credentials',
+  SUBJECTS: 'es_subjects'
 };
 
-// Initial default credentials
 const DEFAULT_CREDENTIALS: Record<UserRole, { username: string; password: string }> = {
   [UserRole.ADMIN]: { username: 'admin', password: 'admin123' },
   [UserRole.TEACHER]: { username: 'teacher', password: 'teacher123' },
@@ -25,6 +25,9 @@ export const saveAssessments = (assessments: Assessment[]) => localStorage.setIt
 
 export const getPayments = (): Payment[] => JSON.parse(localStorage.getItem(STORAGE_KEYS.PAYMENTS) || '[]');
 export const savePayments = (payments: Payment[]) => localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+
+export const getSubjects = (): Subject[] => JSON.parse(localStorage.getItem(STORAGE_KEYS.SUBJECTS) || '[]');
+export const saveSubjects = (subjects: Subject[]) => localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(subjects));
 
 export const getFeeStructures = (): FeeStructure[] => JSON.parse(localStorage.getItem(STORAGE_KEYS.FEE_STRUCTURES) || '[]');
 export const saveFeeStructures = (structures: FeeStructure[]) => localStorage.setItem(STORAGE_KEYS.FEE_STRUCTURES, JSON.stringify(structures));

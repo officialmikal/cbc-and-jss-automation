@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { UserRole, Student, Assessment, Payment } from './types';
+import { UserRole, Student, Assessment, Payment, Subject } from './types';
 import * as store from './store';
+import { getSubjectsByGrade } from './constants';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import StudentManagement from './components/StudentManagement';
@@ -9,6 +10,7 @@ import AcademicModule from './components/AcademicModule';
 import FinanceModule from './components/FinanceModule';
 import ReportsModule from './components/ReportsModule';
 import SettingsModule from './components/SettingsModule';
+import SubjectManagement from './components/SubjectManagement';
 import { LogIn, ShieldAlert, Lock, User as UserIcon, AlertCircle, Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -17,6 +19,7 @@ const App: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
 
   // Login Form State
   const [loginRole, setLoginRole] = useState<UserRole>(UserRole.ADMIN);
@@ -29,6 +32,22 @@ const App: React.FC = () => {
     setStudents(store.getStudents());
     setAssessments(store.getAssessments());
     setPayments(store.getPayments());
+    
+    // Initialize subjects from storage or defaults if empty
+    const savedSubjects = store.getSubjects();
+    if (savedSubjects.length === 0) {
+      // Seed with some default CBC subjects if empty (Optional, but helps new users)
+      const seed: Subject[] = [];
+      ['Grade 1', 'Grade 4', 'Grade 7'].forEach(g => {
+        getSubjectsByGrade(g).forEach(s => {
+          seed.push({ ...s, grade: g, teacherName: 'Unassigned' });
+        });
+      });
+      setSubjects(seed);
+      store.saveSubjects(seed);
+    } else {
+      setSubjects(savedSubjects);
+    }
 
     // Check for existing session
     const savedUser = localStorage.getItem('es_session');
@@ -75,26 +94,39 @@ const App: React.FC = () => {
 
   const handleDeleteStudent = (id: string) => {
     if (window.confirm("Confirm deletion? This will remove all academic and financial history for this student. This action cannot be undone.")) {
-      // Use functional updates to avoid stale state issues
       setStudents(prev => {
         const updated = prev.filter(s => s.id !== id);
         store.saveStudents(updated);
         return updated;
       });
-      
       setAssessments(prev => {
         const updated = prev.filter(a => a.studentId !== id);
         store.saveAssessments(updated);
         return updated;
       });
-      
       setPayments(prev => {
         const updated = prev.filter(p => p.studentId !== id);
         store.savePayments(updated);
         return updated;
       });
+    }
+  };
 
-      console.log(`Deleted student with ID: ${id}`);
+  const handleAddSubject = (s: Subject) => {
+    setSubjects(prev => {
+      const updated = [...prev, s];
+      store.saveSubjects(updated);
+      return updated;
+    });
+  };
+
+  const handleDeleteSubject = (id: string) => {
+    if (window.confirm("Delete this subject? This won't remove existing marks but the subject will no longer be available for new entries.")) {
+      setSubjects(prev => {
+        const updated = prev.filter(s => s.id !== id);
+        store.saveSubjects(updated);
+        return updated;
+      });
     }
   };
 
@@ -122,7 +154,6 @@ const App: React.FC = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 relative overflow-hidden">
-        {/* Animated Background Gradients */}
         <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
         <div className="absolute top-0 -right-4 w-72 h-72 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
@@ -136,7 +167,6 @@ const App: React.FC = () => {
               <h2 className="text-3xl font-black tracking-tighter">ElimuSmart</h2>
               <p className="text-indigo-100/80 text-sm mt-1 font-medium">Secure Personnel Access Portal</p>
               
-              {/* Role Badges */}
               <div className="flex flex-wrap justify-center gap-2 mt-6">
                 {Object.values(UserRole).map(role => (
                   <button
@@ -242,9 +272,10 @@ const App: React.FC = () => {
     >
       {activeTab === 'dashboard' && <Dashboard students={students} payments={payments} assessments={assessments} />}
       {activeTab === 'students' && <StudentManagement students={students} onAddStudent={handleAddStudent} onDeleteStudent={handleDeleteStudent} />}
-      {activeTab === 'academic' && <AcademicModule students={students} assessments={assessments} onSaveAssessments={handleSaveAssessments} />}
+      {activeTab === 'academic' && <AcademicModule students={students} assessments={assessments} subjects={subjects} onSaveAssessments={handleSaveAssessments} />}
+      {activeTab === 'subjects' && <SubjectManagement subjects={subjects} onAddSubject={handleAddSubject} onDeleteSubject={handleDeleteSubject} />}
       {activeTab === 'finance' && <FinanceModule students={students} payments={payments} onAddPayment={handleAddPayment} />}
-      {activeTab === 'reports' && <ReportsModule students={students} assessments={assessments} />}
+      {activeTab === 'reports' && <ReportsModule students={students} assessments={assessments} subjects={subjects} />}
       {activeTab === 'settings' && user.role === UserRole.ADMIN && <SettingsModule />}
     </Layout>
   );

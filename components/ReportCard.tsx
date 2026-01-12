@@ -1,19 +1,17 @@
 
 import React from 'react';
-import { Student, Assessment, PerformanceLevel } from '../types';
-import { getSubjectsByGrade, SCHOOL_DEFAULTS } from '../constants';
+import { Student, Assessment, Subject } from '../types';
+import { SCHOOL_DEFAULTS } from '../constants';
 import { Printer, Download, ChevronLeft } from 'lucide-react';
 
 interface ReportCardProps {
   student: Student;
   assessments: Assessment[];
+  subjects: Subject[];
   onClose: () => void;
 }
 
-const ReportCard: React.FC<ReportCardProps> = ({ student, assessments, onClose }) => {
-  const subjects = getSubjectsByGrade(student.grade);
-
-  // Assume the report is for the student's registered term/year if assessments exist
+const ReportCard: React.FC<ReportCardProps> = ({ student, assessments, subjects, onClose }) => {
   const displayTerm = assessments.length > 0 ? assessments[0].term : (student.term || 1);
   const displayYear = assessments.length > 0 ? assessments[0].year : (student.year || new Date().getFullYear());
 
@@ -38,7 +36,6 @@ const ReportCard: React.FC<ReportCardProps> = ({ student, assessments, onClose }
           </div>
         </div>
 
-        {/* Report Card Template */}
         <div className="border-[4px] border-slate-900 p-6 md:p-12 rounded shadow-2xl bg-white relative print:border-[2px] print:shadow-none print:p-8">
           <div className="absolute top-10 right-10 w-28 h-28 border-2 border-slate-100 p-2 text-[10px] text-center flex items-center justify-center italic text-slate-200 uppercase font-black leading-tight tracking-tighter print:opacity-50">
              Official School Stamp & Seal Required
@@ -77,20 +74,16 @@ const ReportCard: React.FC<ReportCardProps> = ({ student, assessments, onClose }
               <p className="text-[10px] text-slate-400 uppercase font-black mb-1.5 tracking-widest">Current Grade Level</p>
               <p className="text-lg font-black text-slate-800 border-b-2 border-slate-300 pb-1 tracking-tight">{student.grade}</p>
             </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase font-black mb-1.5 tracking-widest">School Attendance</p>
-              <p className="text-lg font-black text-slate-800 border-b-2 border-slate-300 pb-1 tracking-tight">___ / ___ Sessions</p>
-            </div>
           </section>
 
           <div className="overflow-x-auto mb-10 custom-scrollbar">
             <table className="w-full border-collapse border-2 border-slate-900 rounded-xl overflow-hidden shadow-sm">
               <thead>
                 <tr className="bg-slate-900 text-white">
-                  <th className="border border-slate-800 px-4 py-4 text-left text-[10px] uppercase font-black tracking-widest">Learning Area (Subject)</th>
+                  <th className="border border-slate-800 px-4 py-4 text-left text-[10px] uppercase font-black tracking-widest">Learning Area</th>
                   <th className="border border-slate-800 px-4 py-4 text-center text-[10px] uppercase font-black tracking-widest">Score %</th>
                   <th className="border border-slate-800 px-4 py-4 text-center text-[10px] uppercase font-black tracking-widest">Level</th>
-                  <th className="border border-slate-800 px-4 py-4 text-left text-[10px] uppercase font-black tracking-widest">Teacher's Professional Remarks</th>
+                  <th className="border border-slate-800 px-4 py-4 text-left text-[10px] uppercase font-black tracking-widest">Teacher</th>
                 </tr>
               </thead>
               <tbody>
@@ -103,7 +96,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ student, assessments, onClose }
                       <td className="border border-slate-300 px-4 py-3 text-center text-[11px] font-black uppercase text-slate-500">
                         {assessment?.level.split(' ')[0] || '-'}
                       </td>
-                      <td className="border border-slate-300 px-4 py-3 text-[11px] font-medium text-slate-600 leading-tight italic max-w-xs">{assessment?.remarks || '-'}</td>
+                      <td className="border border-slate-300 px-4 py-3 text-[10px] font-black uppercase text-slate-400 leading-tight italic">{sub.teacherName || '-'}</td>
                     </tr>
                   );
                 })}
@@ -112,20 +105,16 @@ const ReportCard: React.FC<ReportCardProps> = ({ student, assessments, onClose }
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10 text-[9px] text-center uppercase font-black text-slate-700">
-            <div className="border-2 border-slate-200 p-3 bg-emerald-50 rounded-xl">EE: Exceeding Expectations (80+)</div>
-            <div className="border-2 border-slate-200 p-3 bg-blue-50 rounded-xl">ME: Meeting Expectations (60-79)</div>
+            <div className="border-2 border-slate-200 p-3 bg-emerald-50 rounded-xl">EE: Exceeding (80+)</div>
+            <div className="border-2 border-slate-200 p-3 bg-blue-50 rounded-xl">ME: Meeting (60-79)</div>
             <div className="border-2 border-slate-200 p-3 bg-amber-50 rounded-xl">AE: Approaching (40-59)</div>
-            <div className="border-2 border-slate-200 p-3 bg-rose-50 rounded-xl">BE: Below Expectations (0-39)</div>
+            <div className="border-2 border-slate-200 p-3 bg-rose-50 rounded-xl">BE: Below (0-39)</div>
           </div>
 
           <div className="space-y-8">
             <div className="border-b-2 border-slate-200 pb-4">
-              <p className="text-xs font-black text-slate-900 mb-2 uppercase tracking-widest">Class Teacher's General Appraisal:</p>
-              <p className="text-sm italic text-slate-400 min-h-[1.5rem] font-medium">____________________________________________________________________________________________________________</p>
-            </div>
-            <div className="border-b-2 border-slate-200 pb-4">
-              <p className="text-xs font-black text-slate-900 mb-2 uppercase tracking-widest">Head Teacher's Final Comments:</p>
-              <p className="text-sm italic text-slate-400 min-h-[1.5rem] font-medium">____________________________________________________________________________________________________________</p>
+              <p className="text-xs font-black text-slate-900 mb-2 uppercase tracking-widest">General Remarks:</p>
+              <p className="text-sm italic text-slate-400 min-h-[1.5rem] font-medium">_________________________________________________________________________________</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 pt-10 gap-16">
@@ -135,14 +124,13 @@ const ReportCard: React.FC<ReportCardProps> = ({ student, assessments, onClose }
                </div>
                <div className="text-center">
                   <div className="border-b-2 border-slate-900 w-full mb-3 shadow-sm"></div>
-                  <p className="text-[11px] font-black uppercase text-slate-500 tracking-[0.2em]">Head Teacher Signature & Stamp</p>
+                  <p className="text-[11px] font-black uppercase text-slate-500 tracking-[0.2em]">Head Teacher Signature</p>
                </div>
             </div>
           </div>
 
           <footer className="mt-16 text-center text-[10px] text-slate-400 border-t border-slate-100 pt-6 flex flex-col md:flex-row justify-between items-center gap-2 uppercase font-black tracking-widest">
-             <span>Powered by ElimuSmart JSS Systems Kenya</span>
-             <span>Report Authenticity ID: {student.id.slice(0, 12).toUpperCase()}</span>
+             <span>ElimuSmart JSS Kenya</span>
              <span>Printed: {new Date().toLocaleDateString('en-KE')}</span>
           </footer>
         </div>

@@ -13,7 +13,8 @@ import {
   Wifi,
   WifiOff,
   Menu,
-  X
+  X,
+  GraduationCap
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -44,6 +45,7 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout, activeTab, se
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: [UserRole.ADMIN, UserRole.TEACHER, UserRole.ACCOUNTANT, UserRole.HEADTEACHER] },
     { id: 'students', label: 'Students', icon: Users, roles: [UserRole.ADMIN, UserRole.TEACHER, UserRole.HEADTEACHER] },
+    { id: 'subjects', label: 'Subjects', icon: GraduationCap, roles: [UserRole.ADMIN, UserRole.TEACHER, UserRole.HEADTEACHER] },
     { id: 'academic', label: 'Academic', icon: BookOpen, roles: [UserRole.ADMIN, UserRole.TEACHER, UserRole.HEADTEACHER] },
     { id: 'finance', label: 'Finance', icon: Wallet, roles: [UserRole.ADMIN, UserRole.ACCOUNTANT, UserRole.HEADTEACHER] },
     { id: 'reports', label: 'Reports', icon: FileText, roles: [UserRole.ADMIN, UserRole.HEADTEACHER] },
@@ -59,7 +61,6 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout, activeTab, se
 
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans">
-      {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] lg:hidden"
@@ -67,7 +68,6 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout, activeTab, se
         />
       )}
 
-      {/* Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 w-72 bg-indigo-950 text-white z-[70] transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} no-print`}>
         <div className="p-6">
           <div className="flex items-center justify-between">
@@ -112,9 +112,7 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout, activeTab, se
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Mobile Header */}
         <header className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-slate-200 no-print">
           <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2">
             <Menu className="w-6 h-6 text-slate-600" />
@@ -123,7 +121,6 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout, activeTab, se
           <div className={`w-3 h-3 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-rose-500'}`} />
         </header>
 
-        {/* Desktop Header & Content Scroll */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 lg:p-10 pb-24 lg:pb-10 relative custom-scrollbar">
           <header className="hidden lg:flex justify-between items-center mb-10 no-print">
             <div>
@@ -154,7 +151,7 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout, activeTab, se
             <div className="mb-8 p-5 bg-amber-50 border border-amber-200 rounded-3xl flex items-center gap-5 text-amber-900 animate-in slide-in-from-top-4 shadow-sm">
               <WifiOff className="w-6 h-6 flex-shrink-0 text-amber-600" />
               <p className="text-sm font-semibold leading-snug">
-                <strong>Offline Mode Enabled:</strong> Your changes will be saved to local storage and synced later. Some cloud-based AI features are currently unavailable.
+                <strong>Offline Mode Enabled:</strong> Your changes will be saved locally and synced later.
               </p>
             </div>
           )}
@@ -165,7 +162,6 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout, activeTab, se
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
       <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 lg:hidden flex justify-around items-center h-20 px-2 z-[50] no-print">
         {filteredMenu.slice(0, 5).map(item => (
           <button
