@@ -16,6 +16,9 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
   const [searchTerm, setSearchTerm] = useState('');
   const [bulkCsv, setBulkCsv] = useState('');
   
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
+
   const generateId = () => {
     try {
       return crypto.randomUUID();
@@ -32,7 +35,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
     parentName: '',
     parentPhone: '',
     term: 1,
-    year: new Date().getFullYear(),
+    year: currentYear,
     admissionDate: new Date().toISOString().split('T')[0]
   });
 
@@ -55,7 +58,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
     let count = 0;
     const today = new Date().toISOString().split('T')[0];
     lines.forEach(line => {
-      const [name, adm, grade, stream, parent, phone, date] = line.split(',').map(s => s?.trim());
+      const [name, adm, grade, stream, parent, phone, date, term, year] = line.split(',').map(s => s?.trim());
       if (name && adm) {
         onAddStudent({
           id: generateId(),
@@ -65,8 +68,8 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
           stream: stream || 'A',
           parentName: parent || 'N/A',
           parentPhone: phone || 'N/A',
-          term: 1,
-          year: 2024,
+          term: parseInt(term) || 1,
+          year: parseInt(year) || currentYear,
           admissionDate: date || today
         });
         count++;
@@ -131,7 +134,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
                 <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider">Admission #</th>
                 <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider">Admission Date</th>
                 <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider">Grade/Class</th>
-                <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider">Parent Contact</th>
+                <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider">Term/Year</th>
                 <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider"></th>
               </tr>
             </thead>
@@ -161,8 +164,8 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
                     <div className="text-xs text-slate-400">Stream {student.stream}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-slate-700">{student.parentName}</div>
-                    <div className="text-xs text-slate-400">{student.parentPhone}</div>
+                    <div className="text-sm text-slate-700">Term {student.term}</div>
+                    <div className="text-xs text-slate-400">Year {student.year}</div>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1">
@@ -199,10 +202,10 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
               <button onClick={() => setShowBulkModal(false)}><X className="w-5 h-5" /></button>
             </div>
             <div className="p-8 space-y-4">
-              <p className="text-sm text-slate-500 italic">Paste CSV data below: <br/> Format: <code className="bg-slate-100 px-1 rounded">Name, AdmNo, Grade, Stream, ParentName, Phone, Date(Optional)</code></p>
+              <p className="text-sm text-slate-500 italic">Format: <code className="bg-slate-100 px-1 rounded">Name, AdmNo, Grade, Stream, ParentName, Phone, Date, Term, Year</code></p>
               <textarea 
                 className="w-full h-48 p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-xs focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                placeholder="John Doe, ADM001, Grade 4, A, Jane Doe, 0712345678, 2024-01-15"
+                placeholder="John Doe, ADM001, Grade 4, A, Jane Doe, 0712345678, 2024-01-15, 1, 2024"
                 value={bulkCsv}
                 onChange={e => setBulkCsv(e.target.value)}
               />
@@ -255,6 +258,22 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
                   </select>
                 </div>
                 <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Term</label>
+                  <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"
+                    value={formData.term} onChange={e => setFormData({...formData, term: parseInt(e.target.value)})} >
+                    <option value={1}>Term 1</option>
+                    <option value={2}>Term 2</option>
+                    <option value={3}>Term 3</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Year</label>
+                  <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"
+                    value={formData.year} onChange={e => setFormData({...formData, year: parseInt(e.target.value)})} >
+                    {years.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
+                <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Stream</label>
                   <input type="text" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"
                     value={formData.stream} onChange={e => setFormData({...formData, stream: e.target.value})} />
@@ -264,7 +283,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ students, onAddSt
                   <input required type="text" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"
                     value={formData.parentName} onChange={e => setFormData({...formData, parentName: e.target.value})} />
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Parent Phone</label>
                   <input required type="tel" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"
                     value={formData.parentPhone} onChange={e => setFormData({...formData, parentPhone: e.target.value})} />
