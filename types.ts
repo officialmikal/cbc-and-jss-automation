@@ -23,6 +23,7 @@ export interface Student {
   id: string;
   admissionNo: string;
   name: string;
+  gender: 'Boy' | 'Girl';
   grade: string;
   stream: string;
   parentName: string;
@@ -40,6 +41,8 @@ export interface Assessment {
   score: number;
   level: PerformanceLevel;
   remarks: string;
+  daysPresent?: number;
+  totalDays?: number;
 }
 
 export interface Subject {

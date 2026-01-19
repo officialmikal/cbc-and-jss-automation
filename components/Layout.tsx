@@ -14,7 +14,10 @@ import {
   WifiOff,
   Menu,
   X,
-  GraduationCap
+  GraduationCap,
+  Download,
+  Smartphone,
+  Monitor
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -28,6 +31,8 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, role, onLogout, activeTab, setActiveTab }) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallPopUp, setShowInstallPopUp] = useState(false);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -36,11 +41,49 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout, activeTab, se
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // PWA Install Logic
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setDeferredPrompt(e);
+      // Show the custom install pop-up after a short delay
+      setTimeout(() => {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+        if (!isStandalone) {
+          setShowInstallPopUp(true);
+        }
+      }, 3000);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    
+    // Show the native install prompt
+    deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      console.log('User accepted the install prompt');
+    } else {
+      console.log('User dismissed the install prompt');
+    }
+    
+    // We've used the prompt, and can't use it again
+    setDeferredPrompt(null);
+    setShowInstallPopUp(false);
+  };
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: [UserRole.ADMIN, UserRole.TEACHER, UserRole.ACCOUNTANT, UserRole.HEADTEACHER] },
@@ -178,6 +221,43 @@ const Layout: React.FC<LayoutProps> = ({ children, role, onLogout, activeTab, se
           </button>
         ))}
       </nav>
+
+      {/* App Install Pop-up */}
+      {showInstallPopUp && (
+        <div className="fixed bottom-24 lg:bottom-8 right-4 left-4 lg:left-auto lg:w-[400px] z-[100] animate-in slide-in-from-bottom-8 duration-500 no-print">
+          <div className="bg-white/90 backdrop-blur-xl border border-indigo-100 p-6 rounded-[2.5rem] shadow-2xl shadow-indigo-900/20">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
+                <Smartphone className="w-6 h-6 hidden lg:block" />
+                <Monitor className="w-6 h-6 lg:hidden" />
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-start">
+                  <h4 className="font-black text-slate-800 leading-tight">Install ElimuSmart</h4>
+                  <button onClick={() => setShowInstallPopUp(false)} className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 font-medium mt-1">Get faster access and full offline capabilities by adding to your home screen.</p>
+                <div className="mt-4 flex gap-3">
+                  <button 
+                    onClick={handleInstallClick}
+                    className="flex-1 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest py-3 rounded-xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Install Now
+                  </button>
+                  <button 
+                    onClick={() => setShowInstallPopUp(false)}
+                    className="px-4 py-3 bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all"
+                  >
+                    Maybe later
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
